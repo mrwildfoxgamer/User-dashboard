@@ -1,39 +1,61 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { ApiResponse, User } from '../types';
 import { UserService } from '../services/userService';
 
-export function useUsers(): ApiResponse<User[]> {
+// ─── useUsers (with retry) ────────────────────────────────────────────────────
+export function useUsers(): ApiResponse<User[]> & { retry: () => void } {
   const [state, setState] = useState<ApiResponse<User[]>>({
     data: null,
     loading: true,
     error: null,
   });
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    UserService.getAll()
-      .then((data) => setState({ data, loading: false, error: null }))
-      .catch((err: Error) =>
-        setState({ data: null, loading: false, error: err.message })
-      );
-  }, []);
+    let cancelled = false;
+    setState((s) => ({ ...s, loading: true, error: null }));
 
-  return state;
+    UserService.getAll()
+      .then((data) => {
+        if (!cancelled) setState({ data, loading: false, error: null });
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setState({ data: null, loading: false, error: err.message });
+      });
+
+    return () => { cancelled = true; };
+  }, [tick]);
+
+  const retry = useCallback(() => setTick((t) => t + 1), []);
+
+  return { ...state, retry };
 }
 
-export function useUser(id: number): ApiResponse<User> {
+// ─── useUser (single, with retry) ────────────────────────────────────────────
+export function useUser(id: number): ApiResponse<User> & { retry: () => void } {
   const [state, setState] = useState<ApiResponse<User>>({
     data: null,
     loading: true,
     error: null,
   });
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    UserService.getById(id)
-      .then((data) => setState({ data, loading: false, error: null }))
-      .catch((err: Error) =>
-        setState({ data: null, loading: false, error: err.message })
-      );
-  }, [id]);
+    let cancelled = false;
+    setState((s) => ({ ...s, loading: true, error: null }));
 
-  return state;
+    UserService.getById(id)
+      .then((data) => {
+        if (!cancelled) setState({ data, loading: false, error: null });
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setState({ data: null, loading: false, error: err.message });
+      });
+
+    return () => { cancelled = true; };
+  }, [id, tick]);
+
+  const retry = useCallback(() => setTick((t) => t + 1), []);
+
+  return { ...state, retry };
 }

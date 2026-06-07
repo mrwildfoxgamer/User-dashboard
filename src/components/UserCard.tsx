@@ -1,9 +1,12 @@
+import { memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import type { User } from '../types';
 
 interface Props {
   user: User;
   searchTerm?: string;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: number) => void;
 }
 
 function highlight(text: string, term: string): React.ReactNode {
@@ -21,7 +24,23 @@ function highlight(text: string, term: string): React.ReactNode {
   );
 }
 
-export default function UserCard({ user, searchTerm = '' }: Props) {
+const COLOURS = [
+  'bg-rose-100 text-rose-700',
+  'bg-sky-100 text-sky-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-violet-100 text-violet-700',
+  'bg-amber-100 text-amber-700',
+  'bg-pink-100 text-pink-700',
+  'bg-teal-100 text-teal-700',
+  'bg-indigo-100 text-indigo-700',
+];
+
+const UserCard = memo(function UserCard({
+  user,
+  searchTerm = '',
+  isFavorite = false,
+  onToggleFavorite,
+}: Props) {
   const initials = user.name
     .split(' ')
     .map((n) => n[0])
@@ -29,27 +48,37 @@ export default function UserCard({ user, searchTerm = '' }: Props) {
     .join('')
     .toUpperCase();
 
-  // Deterministic avatar colour from user id
-  const colours = [
-    'bg-rose-100 text-rose-700',
-    'bg-sky-100 text-sky-700',
-    'bg-emerald-100 text-emerald-700',
-    'bg-violet-100 text-violet-700',
-    'bg-amber-100 text-amber-700',
-    'bg-pink-100 text-pink-700',
-    'bg-teal-100 text-teal-700',
-    'bg-indigo-100 text-indigo-700',
-  ];
-  const colourClass = colours[user.id % colours.length];
+  const colourClass = COLOURS[user.id % COLOURS.length];
+
+  const handleFav = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onToggleFavorite?.(user.id);
+    },
+    [user.id, onToggleFavorite]
+  );
 
   return (
     <Link
       to={`/users/${user.id}`}
-      className="group flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm
+      className="group relative flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm
                  transition-all duration-200 hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5"
     >
+      {/* Favorite button */}
+      {onToggleFavorite && (
+        <button
+          onClick={handleFav}
+          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          className={`absolute right-4 top-4 text-lg leading-none transition-transform hover:scale-110
+            ${isFavorite ? 'text-amber-400' : 'text-slate-200 hover:text-amber-300'}`}
+        >
+          ★
+        </button>
+      )}
+
       {/* Avatar + name */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pr-6">
         <div
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${colourClass}`}
         >
@@ -88,4 +117,6 @@ export default function UserCard({ user, searchTerm = '' }: Props) {
       </div>
     </Link>
   );
-}
+});
+
+export default UserCard;

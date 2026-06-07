@@ -1,9 +1,11 @@
+import { memo } from 'react';
+
 interface Props {
   message: string;
   onRetry: () => void;
 }
 
-export default function ErrorState({ message, onRetry }: Props) {
+const ErrorState = memo(function ErrorState({ message, onRetry }: Props) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-3xl">
@@ -22,4 +24,6 @@ export default function ErrorState({ message, onRetry }: Props) {
       </button>
     </div>
   );
-}
+});
+
+export default ErrorState;

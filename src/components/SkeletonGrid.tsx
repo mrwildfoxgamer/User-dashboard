@@ -1,4 +1,6 @@
-export default function SkeletonGrid() {
+import { memo } from 'react';
+
+const SkeletonGrid = memo(function SkeletonGrid() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
       {Array.from({ length: 8 }).map((_, i) => (
@@ -23,4 +25,6 @@ export default function SkeletonGrid() {
       ))}
     </div>
   );
-}
+});
+
+export default SkeletonGrid;

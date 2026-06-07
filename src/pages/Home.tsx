@@ -1,8 +1,9 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useUsers } from '../hooks/useUsers';
 import { useFavorites } from '../hooks/useFavorites';
 import { usePagination } from '../hooks/usePagination';
 import { useTheme } from '../hooks/useTheme';
+import { useUserFilters } from '../hooks/useUserFilters';
 import UserCard from '../components/UserCard';
 import Toolbar from '../components/Toolbar';
 import SkeletonGrid from '../components/SkeletonGrid';
@@ -11,41 +12,25 @@ import EmptyState from '../components/EmptyState';
 import Pagination from '../components/Pagination';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { filterAndSort, getUnique, DEFAULT_FILTERS } from '../utils/filterUsers';
 import { exportUsersToCsv } from '../utils/exportCsv';
-import type { FilterState } from '../utils/filterUsers';
 
 export default function Home() {
   const { data: users, loading, error, retry } = useUsers();
   const { favorites, toggle: toggleFav, isFavorite } = useFavorites();
   const { isDark, toggle: toggleTheme } = useTheme();
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  const cities = useMemo(() => getUnique(users ?? [], 'city'), [users]);
-  const companies = useMemo(() => getUnique(users ?? [], 'company'), [users]);
-
-  const filtered = useMemo(() => {
-    let result = filterAndSort(users ?? [], filters);
-    if (showFavoritesOnly) result = result.filter((u) => favorites.has(u.id));
-    return result;
-  }, [users, filters, showFavoritesOnly, favorites]);
+  const {
+    filters,
+    showFavoritesOnly,
+    filtered,
+    cities,
+    companies,
+    patchFilters,
+    reset,
+    toggleFavoritesOnly,
+  } = useUserFilters(users, favorites);
 
   const pagination = usePagination(filtered);
-
-  const patch = useCallback(
-    (p: Partial<FilterState>) => setFilters((f) => ({ ...f, ...p })),
-    []
-  );
-
-  const handleReset = useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
-    setShowFavoritesOnly(false);
-  }, []);
-
-  const handleToggleFavoritesFilter = useCallback(() => {
-    setShowFavoritesOnly((v) => !v);
-  }, []);
 
   const handleExportCsv = useCallback(() => {
     exportUsersToCsv(filtered, 'users-export.csv');
@@ -59,8 +44,8 @@ export default function Home() {
         onToggleTheme={toggleTheme}
       />
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8 space-y-6">
-        {/* Toolbar */}
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+        {/* Toolbar — only when data is ready */}
         {!loading && !error && (
           <Toolbar
             filters={filters}
@@ -70,28 +55,23 @@ export default function Home() {
             filteredCount={filtered.length}
             favoritesCount={favorites.size}
             showFavoritesOnly={showFavoritesOnly}
-            onChange={patch}
-            onReset={handleReset}
-            onToggleFavoritesFilter={handleToggleFavoritesFilter}
+            onChange={patchFilters}
+            onReset={reset}
+            onToggleFavoritesFilter={toggleFavoritesOnly}
             onExportCsv={handleExportCsv}
           />
         )}
 
-        {/* Loading */}
         {loading && <SkeletonGrid />}
-
-        {/* Error */}
         {error && <ErrorState message={error} onRetry={retry} />}
 
-        {/* Empty state */}
         {!loading && !error && filtered.length === 0 && (
-          <EmptyState showFavoritesOnly={showFavoritesOnly} onReset={handleReset} />
+          <EmptyState showFavoritesOnly={showFavoritesOnly} onReset={reset} />
         )}
 
-        {/* Card grid */}
         {!loading && !error && filtered.length > 0 && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
               {pagination.pageItems.map((user) => (
                 <UserCard
                   key={user.id}

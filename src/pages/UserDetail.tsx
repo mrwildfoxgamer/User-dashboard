@@ -5,20 +5,18 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useTheme } from '../hooks/useTheme';
 import ErrorState from '../components/ErrorState';
 import Footer from '../components/Footer';
+import Avatar from '../components/Avatar';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const InfoRow = memo(function InfoRow({
-  icon,
-  label,
-  value,
-  href,
-}: {
+interface InfoRowProps {
   icon: string;
   label: string;
   value: string;
   href?: string;
-}) {
+}
+
+const InfoRow = memo(function InfoRow({ icon, label, value, href }: InfoRowProps) {
   return (
     <div className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0 dark:border-slate-700">
       <span className="mt-0.5 text-base w-5 shrink-0 text-center">{icon}</span>
@@ -43,13 +41,12 @@ const InfoRow = memo(function InfoRow({
   );
 });
 
-const Section = memo(function Section({
-  title,
-  children,
-}: {
+interface SectionProps {
   title: string;
   children: React.ReactNode;
-}) {
+}
+
+const Section = memo(function Section({ title, children }: SectionProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-700 dark:bg-slate-800">
       <div className="border-b border-slate-100 px-6 py-3 bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50">
@@ -80,16 +77,7 @@ function DetailSkeleton() {
   );
 }
 
-const COLOURS = [
-  ['bg-rose-100', 'text-rose-700', 'dark:bg-rose-900/40', 'dark:text-rose-300'],
-  ['bg-sky-100', 'text-sky-700', 'dark:bg-sky-900/40', 'dark:text-sky-300'],
-  ['bg-emerald-100', 'text-emerald-700', 'dark:bg-emerald-900/40', 'dark:text-emerald-300'],
-  ['bg-violet-100', 'text-violet-700', 'dark:bg-violet-900/40', 'dark:text-violet-300'],
-  ['bg-amber-100', 'text-amber-700', 'dark:bg-amber-900/40', 'dark:text-amber-300'],
-  ['bg-pink-100', 'text-pink-700', 'dark:bg-pink-900/40', 'dark:text-pink-300'],
-  ['bg-teal-100', 'text-teal-700', 'dark:bg-teal-900/40', 'dark:text-teal-300'],
-  ['bg-indigo-100', 'text-indigo-700', 'dark:bg-indigo-900/40', 'dark:text-indigo-300'],
-];
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>();
@@ -100,37 +88,29 @@ export default function UserDetail() {
   const { isDark, toggle: toggleTheme } = useTheme();
   const fav = isFavorite(numId);
 
-  const colours = COLOURS[numId % COLOURS.length];
-  const avatarCls = colours.join(' ');
-
-  const initials =
-    user?.name
-      .split(' ')
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase() ?? '??';
-
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-sm px-6 py-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-sm px-4 sm:px-6 py-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
         <div className="mx-auto max-w-4xl flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 text-sm">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition dark:text-slate-400 dark:hover:text-slate-100 shrink-0"
+              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-800 transition dark:text-slate-400 dark:hover:text-slate-100 shrink-0"
             >
               ← Back
             </button>
-            <span className="text-slate-200 dark:text-slate-700">|</span>
-            <Link to="/" className="text-sm text-slate-400 hover:text-slate-600 transition dark:text-slate-500 dark:hover:text-slate-300 shrink-0">
+            <span className="text-slate-200 dark:text-slate-700 hidden sm:inline">|</span>
+            <Link
+              to="/"
+              className="hidden sm:inline text-slate-400 hover:text-slate-600 transition dark:text-slate-500 dark:hover:text-slate-300"
+            >
               Directory
             </Link>
             {user && (
               <>
-                <span className="text-slate-200 dark:text-slate-700">/</span>
-                <span className="text-sm font-medium text-slate-700 truncate dark:text-slate-200">
+                <span className="text-slate-200 dark:text-slate-700 hidden sm:inline">/</span>
+                <span className="font-medium text-slate-700 truncate dark:text-slate-200">
                   {user.name}
                 </span>
               </>
@@ -147,31 +127,29 @@ export default function UserDetail() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 sm:px-6 py-8 sm:py-10">
         {loading && <DetailSkeleton />}
         {error && <ErrorState message={error} onRetry={retry} />}
 
         {!loading && !error && user && (
           <div className="space-y-6 animate-slide-up">
             {/* Hero card */}
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm px-8 py-7 dark:border-slate-700 dark:bg-slate-800">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                <div
-                  className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-2xl font-bold ${avatarCls}`}
-                >
-                  {initials}
-                </div>
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm px-5 sm:px-8 py-6 sm:py-7 dark:border-slate-700 dark:bg-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
+                <Avatar name={user.name} id={user.id} size="lg" />
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
                       {user.name}
                     </h1>
                     <button
                       onClick={() => toggle(numId)}
                       aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
                       className={`text-xl transition-all duration-150 hover:scale-125 active:scale-95 ${
-                        fav ? 'text-amber-400' : 'text-slate-300 hover:text-amber-300 dark:text-slate-600 dark:hover:text-amber-400'
+                        fav
+                          ? 'text-amber-400'
+                          : 'text-slate-300 hover:text-amber-300 dark:text-slate-600 dark:hover:text-amber-400'
                       }`}
                     >
                       ★
@@ -210,7 +188,11 @@ export default function UserDetail() {
               <div className="md:col-span-2">
                 <Section title="Address">
                   <div className="grid sm:grid-cols-2">
-                    <InfoRow icon="🏠" label="Street" value={`${user.address.street}, ${user.address.suite}`} />
+                    <InfoRow
+                      icon="🏠"
+                      label="Street"
+                      value={`${user.address.street}, ${user.address.suite}`}
+                    />
                     <InfoRow icon="🏙️" label="City" value={user.address.city} />
                     <InfoRow icon="📮" label="Zip code" value={user.address.zipcode} />
                     <InfoRow

@@ -6,6 +6,9 @@ type Props = Pick<
   'page' | 'totalPages' | 'prev' | 'next' | 'hasPrev' | 'hasNext' | 'startIndex' | 'endIndex'
 > & { totalItems: number };
 
+const btnBase =
+  'flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition';
+
 const Pagination = memo(function Pagination({
   page,
   totalPages,
@@ -19,7 +22,6 @@ const Pagination = memo(function Pagination({
 }: Props) {
   if (totalPages <= 1) return null;
 
-  // Build page number buttons: always show first, last, current ±1
   const pages: (number | '…')[] = [];
   const addPage = (p: number) => {
     if (!pages.includes(p) && p >= 1 && p <= totalPages) pages.push(p);
@@ -35,41 +37,42 @@ const Pagination = memo(function Pagination({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-      {/* Range label */}
-      <p className="text-sm text-slate-400">
-        Showing <span className="font-medium text-slate-600">{startIndex}–{endIndex}</span> of{' '}
-        <span className="font-medium text-slate-600">{totalItems}</span> users
+      <p className="text-sm text-slate-400 dark:text-slate-500">
+        Showing{' '}
+        <span className="font-medium text-slate-600 dark:text-slate-300">
+          {startIndex}–{endIndex}
+        </span>{' '}
+        of{' '}
+        <span className="font-medium text-slate-600 dark:text-slate-300">{totalItems}</span> users
       </p>
 
-      {/* Controls */}
       <div className="flex items-center gap-1">
-        {/* Prev */}
         <button
           onClick={prev}
           disabled={!hasPrev}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white
-                     text-slate-500 transition hover:bg-slate-50 disabled:cursor-not-allowed
-                     disabled:opacity-40"
+          className={`${btnBase} border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700`}
           aria-label="Previous page"
         >
           ‹
         </button>
 
-        {/* Page numbers */}
         {pages.map((p, i) =>
           p === '…' ? (
-            <span key={`ellipsis-${i}`} className="flex h-9 w-9 items-center justify-center text-slate-400 text-sm select-none">
+            <span
+              key={`ellipsis-${i}`}
+              className="flex h-9 w-9 items-center justify-center text-slate-400 text-sm select-none dark:text-slate-500"
+            >
               …
             </span>
           ) : (
             <button
               key={p}
               disabled={p === page}
-              className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition
-                ${p === page
-                  ? 'bg-slate-800 text-white cursor-default'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
+              className={`${btnBase} ${
+                p === page
+                  ? 'bg-slate-800 text-white cursor-default dark:bg-slate-100 dark:text-slate-900'
+                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+              }`}
               aria-label={`Go to page ${p}`}
               aria-current={p === page ? 'page' : undefined}
             >
@@ -78,13 +81,10 @@ const Pagination = memo(function Pagination({
           )
         )}
 
-        {/* Next */}
         <button
           onClick={next}
           disabled={!hasNext}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white
-                     text-slate-500 transition hover:bg-slate-50 disabled:cursor-not-allowed
-                     disabled:opacity-40"
+          className={`${btnBase} border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700`}
           aria-label="Next page"
         >
           ›

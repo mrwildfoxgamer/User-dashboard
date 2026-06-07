@@ -7,18 +7,18 @@ interface Props {
 
 const ErrorState = memo(function ErrorState({ message, onRetry }: Props) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-3xl">
+    <div className="flex flex-col items-center justify-center gap-4 py-24 text-center animate-fade-in">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-3xl dark:bg-rose-900/30">
         ⚠️
       </div>
       <div>
-        <p className="font-semibold text-slate-700">Something went wrong</p>
-        <p className="mt-1 text-sm text-slate-400">{message}</p>
+        <p className="font-semibold text-slate-700 dark:text-slate-300">Something went wrong</p>
+        <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">{message}</p>
       </div>
       <button
         onClick={onRetry}
         className="rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-medium text-white
-                   hover:bg-slate-700 active:scale-95 transition-all"
+                   hover:bg-slate-700 active:scale-95 transition-all dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
       >
         Retry
       </button>

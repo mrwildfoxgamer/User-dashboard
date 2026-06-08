@@ -1,6 +1,5 @@
 # User Directory
 
-A production-ready React + TypeScript application for browsing, searching, and filtering users from the [JSONPlaceholder](https://jsonplaceholder.typicode.com) API.
 
 ---
 
@@ -216,26 +215,4 @@ The header and search bar are sticky on all breakpoints so navigation is always 
 
 ---
 
-## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start Vite dev server at `localhost:5173` |
-| `npm run build` | TypeScript check + production build → `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm test` | Run all 44 tests once |
-| `npm run test:watch` | Vitest in interactive watch mode |
-| `npm run lint` | ESLint on all `.ts` / `.tsx` files |
-| `npm run lint:fix` | ESLint with auto-fix |
-| `npm run format` | Prettier write over `src/` |
-| `npm run format:check` | Prettier check (useful in CI) |
-
----
-
-## Assumptions
-
-- **Read-only data** — JSONPlaceholder is a mock API; no create/update/delete features are implemented.
-- **Client-side only** — all filtering, sorting, and pagination happens in the browser. With a real paginated API these would be query parameters.
-- **10 users** — the API always returns exactly 10 users. Pagination, filters, and the skeleton grid are built to handle any count gracefully.
-- **No authentication** — the API is public; no login flow is needed.
-- **localStorage availability** — favorites, theme, and view mode are persisted to `localStorage`. All reads/writes are wrapped in `try/catch` to handle environments where storage is blocked.

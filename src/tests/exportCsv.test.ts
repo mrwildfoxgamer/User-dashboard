@@ -70,9 +70,12 @@ describe('exportUsersToCsv', () => {
   });
 
   it('escapes commas and quotes in user data', () => {
-    const blobSpy = vi.spyOn(globalThis, 'Blob').mockImplementation(
-      (parts) => ({ size: (parts as string[]).join('').length }) as Blob,
-    );
+    let capturedContent = '';
+    const MockBlob = function (parts: string[]) {
+      capturedContent = parts.join('');
+      return { size: capturedContent.length, type: 'text/csv' };
+    };
+    vi.stubGlobal('Blob', MockBlob);
 
     exportUsersToCsv([
       makeUser(1, 'Alice, Jr.', {
@@ -80,25 +83,26 @@ describe('exportUsersToCsv', () => {
       }),
     ]);
 
-    const csvContent = (blobSpy.mock.calls[0]?.[0] as string[])?.[0] ?? '';
-    expect(csvContent).toContain('"Alice, Jr."');
-    expect(csvContent).toContain('"Acme ""Corp"""');
+    expect(capturedContent).toContain('"Alice, Jr."');
+    expect(capturedContent).toContain('"Acme ""Corp"""');
 
-    blobSpy.mockRestore();
+    vi.unstubAllGlobals();
   });
 
   it('includes header row', () => {
-    const blobSpy = vi.spyOn(globalThis, 'Blob').mockImplementation(
-      (parts) => ({ size: (parts as string[]).join('').length }) as Blob,
-    );
+    let capturedContent = '';
+    const MockBlob = function (parts: string[]) {
+      capturedContent = parts.join('');
+      return { size: capturedContent.length, type: 'text/csv' };
+    };
+    vi.stubGlobal('Blob', MockBlob);
 
     exportUsersToCsv([makeUser(1, 'Alice')]);
 
-    const csvContent = (blobSpy.mock.calls[0]?.[0] as string[])?.[0] ?? '';
-    expect(csvContent).toContain('Name');
-    expect(csvContent).toContain('Email');
-    expect(csvContent).toContain('Company');
+    expect(capturedContent).toContain('Name');
+    expect(capturedContent).toContain('Email');
+    expect(capturedContent).toContain('Company');
 
-    blobSpy.mockRestore();
+    vi.unstubAllGlobals();
   });
 });

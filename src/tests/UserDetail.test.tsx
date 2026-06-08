@@ -72,8 +72,9 @@ describe('UserDetail page', () => {
   it('renders user name and username after fetch', async () => {
     vi.mocked(UserService.getById).mockResolvedValue(mockUser as never);
     renderDetail();
+    // Name appears in both the h1 and the breadcrumb — use the heading
     await waitFor(() =>
-      expect(screen.getByText('Carol White')).toBeInTheDocument(),
+      expect(screen.getByRole('heading', { name: 'Carol White' })).toBeInTheDocument(),
     );
     expect(screen.getByText('@carol')).toBeInTheDocument();
   });
@@ -81,7 +82,7 @@ describe('UserDetail page', () => {
   it('renders all contact info', async () => {
     vi.mocked(UserService.getById).mockResolvedValue(mockUser as never);
     renderDetail();
-    await waitFor(() => screen.getByText('Carol White'));
+    await waitFor(() => screen.getByRole('heading', { name: 'Carol White' }));
     expect(screen.getByText('carol@example.com')).toBeInTheDocument();
     expect(screen.getByText('555-0003')).toBeInTheDocument();
     expect(screen.getByText('carol.io')).toBeInTheDocument();
@@ -90,7 +91,7 @@ describe('UserDetail page', () => {
   it('renders company information', async () => {
     vi.mocked(UserService.getById).mockResolvedValue(mockUser as never);
     renderDetail();
-    await waitFor(() => screen.getByText('Carol White'));
+    await waitFor(() => screen.getByRole('heading', { name: 'Carol White' }));
     expect(screen.getByText('TechCorp')).toBeInTheDocument();
     expect(screen.getByText('Innovate daily')).toBeInTheDocument();
     expect(screen.getByText('scalable solutions')).toBeInTheDocument();
@@ -99,7 +100,7 @@ describe('UserDetail page', () => {
   it('renders address information', async () => {
     vi.mocked(UserService.getById).mockResolvedValue(mockUser as never);
     renderDetail();
-    await waitFor(() => screen.getByText('Carol White'));
+    await waitFor(() => screen.getByRole('heading', { name: 'Carol White' }));
     expect(screen.getByText('Boston')).toBeInTheDocument();
     expect(screen.getByText('02101')).toBeInTheDocument();
   });
@@ -118,7 +119,7 @@ describe('UserDetail page', () => {
   it('toggles favorite when star button is clicked', async () => {
     vi.mocked(UserService.getById).mockResolvedValue(mockUser as never);
     renderDetail();
-    await waitFor(() => screen.getByText('Carol White'));
+    await waitFor(() => screen.getByRole('heading', { name: 'Carol White' }));
 
     const favBtn = screen.getByRole('button', { name: /add to favorites/i });
     fireEvent.click(favBtn);
@@ -130,7 +131,7 @@ describe('UserDetail page', () => {
   it('renders back navigation link', async () => {
     vi.mocked(UserService.getById).mockResolvedValue(mockUser as never);
     renderDetail();
-    await waitFor(() => screen.getByText('Carol White'));
+    await waitFor(() => screen.getByRole('heading', { name: 'Carol White' }));
     expect(screen.getByText('← Back')).toBeInTheDocument();
   });
 });

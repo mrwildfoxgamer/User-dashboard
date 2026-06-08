@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { ApiResponse, User } from '../types';
 import { UserService } from '../services/userService';
 
-// ─── useUsers (with retry) ────────────────────────────────────────────────────
+// ─── useUsers (list, with retry) ──────────────────────────────────────────────
 export function useUsers(): ApiResponse<User[]> & { retry: () => void } {
   const [state, setState] = useState<ApiResponse<User[]>>({
     data: null,
@@ -20,10 +20,13 @@ export function useUsers(): ApiResponse<User[]> & { retry: () => void } {
         if (!cancelled) setState({ data, loading: false, error: null });
       })
       .catch((err: Error) => {
-        if (!cancelled) setState({ data: null, loading: false, error: err.message });
+        if (!cancelled)
+          setState({ data: null, loading: false, error: err.message });
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [tick]);
 
   const retry = useCallback(() => setTick((t) => t + 1), []);
@@ -31,7 +34,7 @@ export function useUsers(): ApiResponse<User[]> & { retry: () => void } {
   return { ...state, retry };
 }
 
-// ─── useUser (single, with retry) ────────────────────────────────────────────
+// ─── useUser (single, with retry) ─────────────────────────────────────────────
 export function useUser(id: number): ApiResponse<User> & { retry: () => void } {
   const [state, setState] = useState<ApiResponse<User>>({
     data: null,
@@ -49,10 +52,13 @@ export function useUser(id: number): ApiResponse<User> & { retry: () => void } {
         if (!cancelled) setState({ data, loading: false, error: null });
       })
       .catch((err: Error) => {
-        if (!cancelled) setState({ data: null, loading: false, error: err.message });
+        if (!cancelled)
+          setState({ data: null, loading: false, error: err.message });
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id, tick]);
 
   const retry = useCallback(() => setTick((t) => t + 1), []);

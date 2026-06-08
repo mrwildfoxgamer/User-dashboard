@@ -1,11 +1,12 @@
 import { memo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../hooks/useUsers';
-import { useFavorites } from '../hooks/useFavorites';
-import { useTheme } from '../hooks/useTheme';
+import { useFavorites } from '../context/FavoritesContext';
+import { useTheme } from '../context/ThemeContext';
 import ErrorState from '../components/ErrorState';
 import Footer from '../components/Footer';
 import Avatar from '../components/Avatar';
+import { ensureHttps } from '../utils/url';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -65,12 +66,20 @@ function DetailSkeleton() {
       <div className="h-8 w-1/3 rounded-lg bg-slate-100 dark:bg-slate-700" />
       <div className="rounded-2xl border border-slate-100 bg-white p-6 space-y-4 dark:border-slate-700 dark:bg-slate-800">
         {[80, 60, 70, 90].map((w, i) => (
-          <div key={i} className="h-4 rounded bg-slate-100 dark:bg-slate-700" style={{ width: `${w}%` }} />
+          <div
+            key={i}
+            className="h-4 rounded bg-slate-100 dark:bg-slate-700"
+            style={{ width: `${w}%` }}
+          />
         ))}
       </div>
       <div className="rounded-2xl border border-slate-100 bg-white p-6 space-y-4 dark:border-slate-700 dark:bg-slate-800">
         {[65, 50, 75].map((w, i) => (
-          <div key={i} className="h-4 rounded bg-slate-100 dark:bg-slate-700" style={{ width: `${w}%` }} />
+          <div
+            key={i}
+            className="h-4 rounded bg-slate-100 dark:bg-slate-700"
+            style={{ width: `${w}%` }}
+          />
         ))}
       </div>
     </div>
@@ -155,13 +164,15 @@ export default function UserDetail() {
                       ★
                     </button>
                   </div>
-                  <p className="text-slate-400 mt-0.5 dark:text-slate-500">@{user.username}</p>
+                  <p className="text-slate-400 mt-0.5 dark:text-slate-500">
+                    @{user.username}
+                  </p>
                 </div>
 
                 <div className="flex sm:flex-col gap-4 sm:gap-1 sm:text-right text-sm text-slate-500 shrink-0 dark:text-slate-400">
                   <span>ID #{user.id}</span>
                   <a
-                    href={`https://${user.website}`}
+                    href={ensureHttps(user.website)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:underline dark:text-blue-400"
@@ -174,14 +185,28 @@ export default function UserDetail() {
 
             <div className="grid gap-6 md:grid-cols-2">
               <Section title="Contact">
-                <InfoRow icon="✉️" label="Email" value={user.email} href={`mailto:${user.email}`} />
+                <InfoRow
+                  icon="✉️"
+                  label="Email"
+                  value={user.email}
+                  href={`mailto:${user.email}`}
+                />
                 <InfoRow icon="📞" label="Phone" value={user.phone} />
-                <InfoRow icon="🌐" label="Website" value={user.website} href={`https://${user.website}`} />
+                <InfoRow
+                  icon="🌐"
+                  label="Website"
+                  value={user.website}
+                  href={ensureHttps(user.website)}
+                />
               </Section>
 
               <Section title="Company">
                 <InfoRow icon="🏢" label="Name" value={user.company.name} />
-                <InfoRow icon="💬" label="Catch phrase" value={user.company.catchPhrase} />
+                <InfoRow
+                  icon="💬"
+                  label="Catch phrase"
+                  value={user.company.catchPhrase}
+                />
                 <InfoRow icon="📊" label="Business" value={user.company.bs} />
               </Section>
 
@@ -194,7 +219,11 @@ export default function UserDetail() {
                       value={`${user.address.street}, ${user.address.suite}`}
                     />
                     <InfoRow icon="🏙️" label="City" value={user.address.city} />
-                    <InfoRow icon="📮" label="Zip code" value={user.address.zipcode} />
+                    <InfoRow
+                      icon="📮"
+                      label="Zip code"
+                      value={user.address.zipcode}
+                    />
                     <InfoRow
                       icon="🗺️"
                       label="Coordinates"

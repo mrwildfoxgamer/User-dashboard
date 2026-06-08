@@ -25,7 +25,7 @@ const renderCard = (props = {}) =>
   render(
     <MemoryRouter>
       <UserCard user={mockUser} {...props} />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 
 describe('UserCard', () => {
@@ -50,12 +50,16 @@ describe('UserCard', () => {
 
   it('shows favorite button when onToggleFavorite is provided', () => {
     renderCard({ onToggleFavorite: vi.fn() });
-    expect(screen.getByRole('button', { name: /add to favorites/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /add to favorites/i }),
+    ).toBeInTheDocument();
   });
 
-  it('shows filled star when isFavorite=true', () => {
+  it('shows remove label when isFavorite=true', () => {
     renderCard({ onToggleFavorite: vi.fn(), isFavorite: true });
-    expect(screen.getByRole('button', { name: /remove from favorites/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /remove from favorites/i }),
+    ).toBeInTheDocument();
   });
 
   it('calls onToggleFavorite with user id on star click', () => {
@@ -73,5 +77,10 @@ describe('UserCard', () => {
   it('hides favorite button when onToggleFavorite not provided', () => {
     renderCard();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('renders phone number', () => {
+    renderCard();
+    expect(screen.getByText('555-0100')).toBeInTheDocument();
   });
 });

@@ -1,7 +1,14 @@
-import { apiFetch } from '../api/client';
+import { apiClient } from '../api/client';
 import type { User } from '../types';
 
 export const UserService = {
-  getAll: () => apiFetch<User[]>('/users'),
-  getById: (id: number) => apiFetch<User>(`/users/${id}`),
+  getAll: async (): Promise<User[]> => {
+    const { data } = await apiClient.get<User[]>('/users');
+    return data;
+  },
+
+  getById: async (id: number): Promise<User> => {
+    const { data } = await apiClient.get<User>(`/users/${id}`);
+    return data;
+  },
 };

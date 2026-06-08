@@ -1,10 +1,12 @@
 import { useCallback } from 'react';
 import { useUsers } from '../hooks/useUsers';
-import { useFavorites } from '../hooks/useFavorites';
 import { usePagination } from '../hooks/usePagination';
-import { useTheme } from '../hooks/useTheme';
 import { useUserFilters } from '../hooks/useUserFilters';
+import { useViewMode } from '../hooks/useViewMode';
+import { useTheme } from '../context/ThemeContext';
+import { useFavorites } from '../context/FavoritesContext';
 import UserCard from '../components/UserCard';
+import UserTable from '../components/UserTable';
 import Toolbar from '../components/Toolbar';
 import SkeletonGrid from '../components/SkeletonGrid';
 import ErrorState from '../components/ErrorState';
@@ -13,11 +15,13 @@ import Pagination from '../components/Pagination';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { exportUsersToCsv } from '../utils/exportCsv';
+import type { SortField } from '../utils/filterUsers';
 
 export default function Home() {
   const { data: users, loading, error, retry } = useUsers();
   const { favorites, toggle: toggleFav, isFavorite } = useFavorites();
   const { isDark, toggle: toggleTheme } = useTheme();
+  const { viewMode, setMode } = useViewMode();
 
   const {
     filters,
@@ -35,6 +39,19 @@ export default function Home() {
   const handleExportCsv = useCallback(() => {
     exportUsersToCsv(filtered, 'users-export.csv');
   }, [filtered]);
+
+  const handleSort = useCallback(
+    (field: SortField) => {
+      if (filters.sortField === field) {
+        patchFilters({
+          sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc',
+        });
+      } else {
+        patchFilters({ sortField: field, sortOrder: 'asc' });
+      }
+    },
+    [filters.sortField, filters.sortOrder, patchFilters],
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
@@ -55,10 +72,12 @@ export default function Home() {
             filteredCount={filtered.length}
             favoritesCount={favorites.size}
             showFavoritesOnly={showFavoritesOnly}
+            viewMode={viewMode}
             onChange={patchFilters}
             onReset={reset}
             onToggleFavoritesFilter={toggleFavoritesOnly}
             onExportCsv={handleExportCsv}
+            onViewModeChange={setMode}
           />
         )}
 
@@ -71,17 +90,33 @@ export default function Home() {
 
         {!loading && !error && filtered.length > 0 && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-              {pagination.pageItems.map((user) => (
-                <UserCard
-                  key={user.id}
-                  user={user}
-                  searchTerm={filters.search}
-                  isFavorite={isFavorite(user.id)}
-                  onToggleFavorite={toggleFav}
-                />
-              ))}
-            </div>
+            {/* Card view */}
+            {viewMode === 'card' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+                {pagination.pageItems.map((user) => (
+                  <UserCard
+                    key={user.id}
+                    user={user}
+                    searchTerm={filters.search}
+                    isFavorite={isFavorite(user.id)}
+                    onToggleFavorite={toggleFav}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Table view */}
+            {viewMode === 'table' && (
+              <UserTable
+                users={pagination.pageItems}
+                searchTerm={filters.search}
+                sortField={filters.sortField}
+                sortOrder={filters.sortOrder}
+                onSort={handleSort}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFav}
+              />
+            )}
 
             <Pagination
               page={pagination.page}

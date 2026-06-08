@@ -1,5 +1,7 @@
 import { memo, useState, useEffect, useCallback } from 'react';
 import type { FilterState, SortField } from '../utils/filterUsers';
+import type { ViewMode } from '../hooks/useViewMode';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface Props {
   filters: FilterState;
@@ -9,10 +11,12 @@ interface Props {
   filteredCount: number;
   favoritesCount: number;
   showFavoritesOnly: boolean;
+  viewMode: ViewMode;
   onChange: (patch: Partial<FilterState>) => void;
   onReset: () => void;
   onToggleFavoritesFilter: () => void;
   onExportCsv: () => void;
+  onViewModeChange: (mode: ViewMode) => void;
 }
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
@@ -32,41 +36,57 @@ const Toolbar = memo(function Toolbar({
   filteredCount,
   favoritesCount,
   showFavoritesOnly,
+  viewMode,
   onChange,
   onReset,
   onToggleFavoritesFilter,
   onExportCsv,
+  onViewModeChange,
 }: Props) {
+  // Local input state — debounced before it hits the filter
   const [inputVal, setInputVal] = useState(filters.search);
+  const debouncedInput = useDebounce(inputVal, 350);
 
+  // Sync debounced value to filters
+  useEffect(() => {
+    onChange({ search: debouncedInput });
+  }, [debouncedInput]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep local input in sync when filters are externally reset
   useEffect(() => {
     if (filters.search === '') setInputVal('');
   }, [filters.search]);
 
-  useEffect(() => {
-    const t = setTimeout(() => onChange({ search: inputVal }), 350);
-    return () => clearTimeout(t);
-  }, [inputVal]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleSortField = useCallback((f: SortField) => onChange({ sortField: f }), [onChange]);
+  const handleSortField = useCallback(
+    (f: SortField) => onChange({ sortField: f }),
+    [onChange],
+  );
   const handleSortOrder = useCallback(
-    () => onChange({ sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' }),
-    [onChange, filters.sortOrder]
+    () =>
+      onChange({ sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' }),
+    [onChange, filters.sortOrder],
   );
   const handleCity = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => onChange({ city: e.target.value }),
-    [onChange]
+    (e: React.ChangeEvent<HTMLSelectElement>) =>
+      onChange({ city: e.target.value }),
+    [onChange],
   );
   const handleCompany = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => onChange({ company: e.target.value }),
-    [onChange]
+    (e: React.ChangeEvent<HTMLSelectElement>) =>
+      onChange({ company: e.target.value }),
+    [onChange],
   );
+  const handleClearSearch = useCallback(() => {
+    setInputVal('');
+    onChange({ search: '' });
+  }, [onChange]);
 
-  const hasActiveFilters = filters.search || filters.city || filters.company || showFavoritesOnly;
+  const hasActiveFilters =
+    filters.search || filters.city || filters.company || showFavoritesOnly;
 
   return (
     <div className="flex flex-col gap-3 animate-fade-in">
-      {/* Row 1: Search + sort */}
+      {/* Row 1: Search + sort + view toggle */}
       <div className="flex flex-wrap gap-3">
         {/* Search */}
         <div className="relative flex-1 min-w-[220px]">
@@ -78,6 +98,7 @@ const Toolbar = memo(function Toolbar({
             placeholder="Search name, username, or email…"
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
+            aria-label="Search users"
             className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-9 text-sm
                        text-slate-700 placeholder-slate-400 shadow-sm outline-none
                        focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition
@@ -85,7 +106,7 @@ const Toolbar = memo(function Toolbar({
           />
           {inputVal && (
             <button
-              onClick={() => { setInputVal(''); onChange({ search: '' }); }}
+              onClick={handleClearSearch}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition dark:hover:text-slate-300"
               aria-label="Clear search"
             >
@@ -117,39 +138,84 @@ const Toolbar = memo(function Toolbar({
         {/* Sort order */}
         <button
           onClick={handleSortOrder}
-          title={filters.sortOrder === 'asc' ? 'Switch to descending' : 'Switch to ascending'}
+          title={
+            filters.sortOrder === 'asc'
+              ? 'Switch to descending'
+              : 'Switch to ascending'
+          }
           className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5
                      text-sm text-slate-600 shadow-sm hover:bg-slate-50 transition select-none
                      dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
         >
           <span>{filters.sortOrder === 'asc' ? '↑' : '↓'}</span>
-          <span className="hidden sm:inline">{filters.sortOrder === 'asc' ? 'Asc' : 'Desc'}</span>
+          <span className="hidden sm:inline">
+            {filters.sortOrder === 'asc' ? 'Asc' : 'Desc'}
+          </span>
         </button>
+
+        {/* View mode toggle */}
+        <div className="flex rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-700 dark:bg-slate-800">
+          <button
+            onClick={() => onViewModeChange('card')}
+            aria-label="Card view"
+            title="Card view"
+            className={`px-3 py-2 text-sm transition ${
+              viewMode === 'card'
+                ? 'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900'
+                : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
+            }`}
+          >
+            ⊞
+          </button>
+          <button
+            onClick={() => onViewModeChange('table')}
+            aria-label="Table view"
+            title="Table view"
+            className={`px-3 py-2 text-sm transition border-l border-slate-200 dark:border-slate-700 ${
+              viewMode === 'table'
+                ? 'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900'
+                : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
+            }`}
+          >
+            ≡
+          </button>
+        </div>
       </div>
 
       {/* Row 2: Filters + count + CSV */}
       <div className="flex flex-wrap items-center gap-3">
-        <select value={filters.city} onChange={handleCity} className={selectCls}>
+        <select value={filters.city} onChange={handleCity} className={selectCls} aria-label="Filter by city">
           <option value="">All cities</option>
-          {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+          {cities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
 
-        <select value={filters.company} onChange={handleCompany} className={selectCls}>
+        <select value={filters.company} onChange={handleCompany} className={selectCls} aria-label="Filter by company">
           <option value="">All companies</option>
-          {companies.map((c) => <option key={c} value={c}>{c}</option>)}
+          {companies.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
 
         {/* Favorites toggle */}
         <button
           onClick={onToggleFavoritesFilter}
           className={`flex items-center gap-1.5 rounded-xl border px-4 py-2 text-sm font-medium transition
-            ${showFavoritesOnly
-              ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
-              : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+            ${
+              showFavoritesOnly
+                ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
+                : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
             }`}
         >
           <span>★</span>
-          <span>Favorites{favoritesCount > 0 ? ` (${favoritesCount})` : ''}</span>
+          <span>
+            Favorites{favoritesCount > 0 ? ` (${favoritesCount})` : ''}
+          </span>
         </button>
 
         {/* Clear filters */}
@@ -169,7 +235,9 @@ const Toolbar = memo(function Toolbar({
             <>{totalCount} users</>
           ) : (
             <>
-              <span className="font-semibold text-slate-600 dark:text-slate-300">{filteredCount}</span>{' '}
+              <span className="font-semibold text-slate-600 dark:text-slate-300">
+                {filteredCount}
+              </span>{' '}
               of {totalCount} users
             </>
           )}

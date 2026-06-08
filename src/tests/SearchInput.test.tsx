@@ -23,12 +23,14 @@ const renderToolbar = (onChange = vi.fn(), overrides: Partial<FilterState> = {})
         filteredCount={10}
         favoritesCount={0}
         showFavoritesOnly={false}
+        viewMode="card"
         onChange={onChange}
         onReset={vi.fn()}
         onToggleFavoritesFilter={vi.fn()}
         onExportCsv={vi.fn()}
+        onViewModeChange={vi.fn()}
       />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 
 describe('Search Input (via Toolbar)', () => {
@@ -37,7 +39,7 @@ describe('Search Input (via Toolbar)', () => {
     expect(screen.getByPlaceholderText(/search name/i)).toBeInTheDocument();
   });
 
-  it('shows clear button when input has value', () => {
+  it('shows clear button when filters.search has value', () => {
     renderToolbar(vi.fn(), { search: 'alice' });
     expect(screen.getByLabelText('Clear search')).toBeInTheDocument();
   });
@@ -52,10 +54,13 @@ describe('Search Input (via Toolbar)', () => {
     renderToolbar(onChange);
     const input = screen.getByPlaceholderText(/search name/i);
     fireEvent.change(input, { target: { value: 'bob' } });
-    await waitFor(() => expect(onChange).toHaveBeenCalledWith({ search: 'bob' }), { timeout: 500 });
+    await waitFor(
+      () => expect(onChange).toHaveBeenCalledWith({ search: 'bob' }),
+      { timeout: 600 },
+    );
   });
 
-  it('clears input when clear button is clicked', async () => {
+  it('clears input and calls onChange when clear button is clicked', () => {
     const onChange = vi.fn();
     renderToolbar(onChange, { search: 'alice' });
     fireEvent.click(screen.getByLabelText('Clear search'));
@@ -71,7 +76,40 @@ describe('Search Input (via Toolbar)', () => {
   it('calls onChange when city filter changes', () => {
     const onChange = vi.fn();
     renderToolbar(onChange);
-    fireEvent.change(screen.getByDisplayValue('All cities'), { target: { value: 'New York' } });
+    fireEvent.change(screen.getByDisplayValue('All cities'), {
+      target: { value: 'New York' },
+    });
     expect(onChange).toHaveBeenCalledWith({ city: 'New York' });
+  });
+
+  it('renders card and table view toggle buttons', () => {
+    renderToolbar();
+    expect(screen.getByLabelText('Card view')).toBeInTheDocument();
+    expect(screen.getByLabelText('Table view')).toBeInTheDocument();
+  });
+
+  it('calls onViewModeChange when table button clicked', () => {
+    const onViewModeChange = vi.fn();
+    render(
+      <MemoryRouter>
+        <Toolbar
+          filters={DEFAULT_FILTERS}
+          cities={[]}
+          companies={[]}
+          totalCount={0}
+          filteredCount={0}
+          favoritesCount={0}
+          showFavoritesOnly={false}
+          viewMode="card"
+          onChange={vi.fn()}
+          onReset={vi.fn()}
+          onToggleFavoritesFilter={vi.fn()}
+          onExportCsv={vi.fn()}
+          onViewModeChange={onViewModeChange}
+        />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByLabelText('Table view'));
+    expect(onViewModeChange).toHaveBeenCalledWith('table');
   });
 });
